@@ -1,0 +1,119 @@
+# TEMPLATE-NOTICE:START
+# /--------------------------------------------------------------------------\
+# | This file is part of a project template. Review it to add or remove the  |
+# | sections this repository actually needs.                                 |
+# |                                                                          |
+# | The canonical copy of this template is maintained at                     |
+# | https://github.com/seangalie/template-gh                                 |
+# |                                                                          |
+# | The Template Bootstrap workflow deletes this notice automatically.       |
+# \--------------------------------------------------------------------------/
+# TEMPLATE-NOTICE:END
+
+# Normalize all text files to LF in the repository AND on checkout, so that
+# every platform sees the same bytes. Without the explicit eol=lf, a Windows
+# checkout would convert these back to CRLF and contradict .editorconfig.
+# The CRLF exceptions are listed further down.
+*           text=auto eol=lf
+*.sh        text eol=lf diff=bash
+*.bash      text eol=lf diff=bash
+*.py        text eol=lf diff=python
+*.go        text eol=lf diff=golang
+*.rb        text eol=lf diff=ruby
+*.toml      text eol=lf
+*.xml       text eol=lf
+*.yaml      text eol=lf
+*.yml       text eol=lf
+*.json      text eol=lf
+*.md        text eol=lf diff=markdown
+*.txt       text eol=lf
+*.htm       text eol=lf diff=html
+*.html      text eol=lf diff=html
+*.css       text eol=lf diff=css
+*.php       text eol=lf diff=php
+*.sql       text eol=lf
+*.js        text eol=lf
+*.ts        text eol=lf
+*.jsx       text eol=lf
+*.tsx       text eol=lf
+
+# Files that must use CRLF on checkout. Git attribute patterns use
+# gitignore-style matching and do NOT expand {a,b} braces, so extensions that
+# are commonly written in either case are spelled as character classes.
+*.csv       text eol=crlf
+*.ps1       text eol=crlf
+*.psm1      text eol=crlf
+*.psd1      text eol=crlf
+*.[cC][mM][dD]  text eol=crlf
+*.[bB][aA][tT]  text eol=crlf
+
+# These files are text and should have LF line endings on checkout
+.gitattributes  text eol=lf
+.gitignore      text eol=lf
+.gitmodules     text eol=lf
+.editorconfig   text eol=lf
+
+# Fix syntax highlighting on GitHub/Forgejo to allow comments
+.vscode/*.json  linguist-language=JSON-with-Comments
+
+# Configs
+package.json        text eol=lf
+package-lock.json   text eol=lf -diff
+pnpm-lock.yaml      text eol=lf -diff
+
+# Other Text-based Assets
+*.svg       text eol=lf
+
+# Images
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.webp      binary
+*.psd       binary
+*.ai        binary
+
+# Compiled objects and archives
+*.a         binary
+*.o         binary
+*.so        binary
+*.dylib     binary
+*.dll       binary
+*.exe       binary
+*.zip       binary
+*.tar       binary
+*.gz        binary
+*.tgz       binary
+*.7z        binary
+*.bz        binary
+*.bz2       binary
+*.bzip2     binary
+*.rar       binary
+*.txz       binary
+*.xz        binary
+
+# Office documents
+*.pdf       binary
+*.doc       binary
+*.docx      binary
+*.xls       binary
+*.xlsx      binary
+*.ppt       binary
+*.pptx      binary
+
+# SQLite databases
+*.db        binary
+*.sqlite    binary
+*.sqlite3   binary
+
+# Fonts
+*.woff      binary
+*.woff2     binary
+*.ttf       binary
+*.otf       binary
+*.eot       binary
+
+# Text files where line endings should be preserved
+*.patch -text
+*.diff  -text

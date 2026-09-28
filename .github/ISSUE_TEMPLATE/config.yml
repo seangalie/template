@@ -1,0 +1,13 @@
+---
+blank_issues_enabled: false
+
+contact_links:
+  - name: 💬 Question, idea, or general discussion
+    url: https://github.com/GITHUB_USERNAME/REPO_SLUG/discussions
+    about: Start a discussion for anything that is not a specific, actionable issue.
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/GITHUB_USERNAME/REPO_SLUG/security/advisories/new
+    about: Please report vulnerabilities privately. Never open a public issue for one.
+  - name: 📖 Contributing guide
+    url: https://github.com/GITHUB_USERNAME/REPO_SLUG/blob/main/docs/CONTRIBUTING.md
+    about: How to set up a development environment and open a pull request.

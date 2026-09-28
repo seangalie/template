@@ -1,0 +1,26 @@
+---
+name: PR Labels
+
+on:
+  pull_request:
+    types: [opened, reopened, labeled, unlabeled, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  pr_labels:
+    name: 🏭 Verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: 🏷 Verify PR has a valid label
+        uses: mheap/github-action-required-labels@23e10fde7e062233401931a0eece796cd9bf3177 # v5.6.0
+        with:
+          mode: minimum
+          count: 1
+          labels: >-
+            breaking-change, bugfix, documentation, enhancement,
+            refactor, performance, new-feature, maintenance, ci, dependencies

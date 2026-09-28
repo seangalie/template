@@ -1,0 +1,5 @@
+# The Template Bootstrap workflow writes this file when the repository is
+# generated: the owner account for a personal repository, or a commented
+# @org/team-name example for an organization, which cannot own code directly.
+#
+# Until then there are no code owners, which is a valid state.

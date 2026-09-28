@@ -1,0 +1,75 @@
+---
+# Dependabot keeps the pinned versions in this repository current. The
+# github-actions ecosystem is enabled by default because every template ships
+# with workflows; uncomment the ecosystem below that matches your project.
+#
+# Reference: https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+
+version: 2
+
+updates:
+  # Keep the actions used by .github/workflows up to date.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    # Wait a week before proposing a new release, so a compromised or broken
+    # version has time to be caught and yanked upstream first.
+    cooldown:
+      default-days: 7
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "ci"
+    groups:
+      # One PR per week for all action bumps instead of one PR per action.
+      github-actions:
+        patterns:
+          - "*"
+
+  # ---------------------------------------------------------------------------
+  # Uncomment and adjust the ecosystem that matches this project. The directory
+  # is where the manifest lives (package.json, requirements.txt, go.mod, ...).
+  # ---------------------------------------------------------------------------
+
+  # - package-ecosystem: "npm"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #   open-pull-requests-limit: 10
+  #   labels:
+  #     - "dependencies"
+  #   commit-message:
+  #     prefix: "fix"
+  #     prefix-development: "chore"
+  #   groups:
+  #     production-minor-patch:
+  #       dependency-type: "production"
+  #       update-types: ["minor", "patch"]
+  #     development:
+  #       dependency-type: "development"
+
+  # - package-ecosystem: "pip"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #   labels:
+  #     - "dependencies"
+
+  # - package-ecosystem: "gomod"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #   labels:
+  #     - "dependencies"
+
+  # - package-ecosystem: "docker"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #   labels:
+  #     - "dependencies"

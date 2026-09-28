@@ -1,0 +1,242 @@
+# TEMPLATE-NOTICE:START
+# /--------------------------------------------------------------------------\
+# | This file is part of a project template. Review it to add or remove the  |
+# | sections this repository actually needs.                                 |
+# |                                                                          |
+# | The canonical copy of this template is maintained at                     |
+# | https://github.com/seangalie/template-gh                                 |
+# |                                                                          |
+# | The Template Bootstrap workflow deletes this notice automatically.       |
+# \--------------------------------------------------------------------------/
+# TEMPLATE-NOTICE:END
+
+# ---------------------------------
+# .gitignore for Linux environments
+# ---------------------------------
+
+*~
+
+# temporary files which can be created if a process still has a handle open of a deleted file
+.fuse_hidden*
+
+# KDE directory preferences
+.directory
+
+# Linux trash folder which might appear on any partition or disk
+.Trash-*
+
+# .nfs files are created when an open file is removed but is still being accessed
+.nfs*
+
+# Log files created by default by the nohup command
+nohup.out
+
+# ---------------------------------
+# .gitignore for macOS environments
+# ---------------------------------
+
+# General
+.DS_Store
+.localized
+__MACOSX/
+.AppleDouble
+.LSOverride
+# Custom folder icons are named "Icon" plus a carriage return. The brackets
+# below hold a literal CR (invisible in most editors): "Icon?" would also
+# ignore folders such as Icons/, and "Icon[\r]" matches "Iconr" instead.
+Icon[]
+
+# Thumbnails & Resource forks
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.com.apple.timemachine.supported
+.PKInstallSandboxManager
+.PKInstallSandboxManager-SystemSoftware
+.hotfiles.btree
+.vol
+.file
+.disk_label*
+lost+found
+.HFS+ Private Directory Data?
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# iCloud generated files
+*.icloud
+
+# Quota system
+.quota.group
+.quota.user
+.quota.ops.group
+.quota.ops.user
+
+# TimeMachine
+Backups.backupdb
+.MobileBackups
+.MobileBackups.trash
+MobileBackups.trash
+tmbootpicker.efi
+
+# -----------------------------------
+# .gitignore for Windows environments
+# -----------------------------------
+
+# Windows thumbnail cache files
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+
+# Dump file
+*.stackdump
+
+# Folder config file
+[Dd]esktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+# ------------------------------------
+# .gitignore for Environment Variables
+# ------------------------------------
+
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# ------------------------------------
+# .gitignore for Agents and Assistants
+# ------------------------------------
+
+# These files are often intentionally committed and shared within the repository
+# to assist teams working on projects collaboratively with agentic tools.  Only
+# uncomment the examples below if they need to remain local-only instructions or
+# configuration files.
+
+# AGENTS.md
+# CRUSH.md
+# GEMINI.md
+# WARP.md
+# QWEN.md
+
+# .warp/
+# .crush/
+# .codeium/
+# .deepseek/
+# .amazon-codewhisperer/
+# .tabnineignore
+# .tabnine/
+
+# OpenAI Codex
+# .codex/
+
+# Claude Code
+CLAUDE.local.md
+# .claude/
+.claude/*.local.json
+.claude/**/*.log
+.claude/worktrees/
+
+# Aider
+.aider.input.history
+.aider.chat.history.md
+.aider.llm.history
+.aider.tags.cache.v*
+# .aiderignore
+
+# Cursor AI
+# .cursorignore and .cursorindexingignore are normally committed, like .gitignore
+# .cursorrules
+# .cursor/
+# .cursor.json
+# .cursor-settings.yaml
+
+# Continue
+# .continue/
+# .continuerc.json
+
+# Cline
+# .cline/
+# .clinerules
+# cline.json
+
+# Gemini CLI
+# .gemini/
+gemini-debug.log
+.gemini-clipboard/
+
+# GitHub Copilot
+# .github/copilot-instructions.md
+
+# Windsurf Editor
+# .windsurfrules
+# .windsurf/
+
+# ---------------------------
+# .gitignore for Zed projects
+# ---------------------------
+
+.zed/*
+!.zed/settings.json
+!.zed/tasks.json
+!.zed/debug.json
+
+# ------------------------------------------
+# .gitignore for Visual Studio Code projects
+# ------------------------------------------
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+# Ionide (F#) workspace state
+.ionide
+
+# -----------------------------
+# .gitignore for Xcode projects
+# -----------------------------
+
+# User settings
+xcuserdata/
+
+# Xcode Patch
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+/*.gcno
+**/xcshareddata/WorkspaceSettings.xcsettings

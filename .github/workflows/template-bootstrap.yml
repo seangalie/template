@@ -1,0 +1,295 @@
+---
+# Runs once in a repository created from this template. It replaces the
+# placeholders, strips the template notices, opens a checklist issue for the
+# parts a human still has to decide, and then deletes itself.
+#
+# The file edits live in .github/scripts/template-bootstrap.sh, so that they can
+# be tested (template-test.yml) and run by hand. This workflow adds everything
+# that needs GitHub: the owner lookup, the checklist issue, the labels, and
+# committing, pushing, or opening a pull request. It deletes the scripts and
+# template-test.yml too.
+#
+# The self-deletion is committed separately: GITHUB_TOKEN is not always allowed
+# to write under .github/workflows, and that must not cost the repository the
+# rest of its personalization.
+#
+# It never runs in the template repository itself: `is_template` is true there
+# and false in every repository generated from it.
+
+name: Template Bootstrap
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Two pushes in quick succession would otherwise race: both would personalize
+# the repository and both would try to push the result.
+concurrency:
+  group: template-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    name: 🧰 Personalize this repository
+    # Forks are skipped too: someone forking the template to contribute to it
+    # must not have their copy personalized out from under them.
+    if: ${{ !github.event.repository.is_template && !github.event.repository.fork }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+      issues: write
+      pull-requests: write
+    env:
+      BASE_BRANCH: ${{ github.event.repository.default_branch || 'main' }}
+      OWNER: ${{ github.repository_owner }}
+      REPO: ${{ github.event.repository.name }}
+      HAS_ISSUES: ${{ github.event.repository.has_issues }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      # Credentials are kept on purpose: this job pushes its commits back.
+      - name: ⤵️ Check out code from GitHub # zizmor: ignore[artipacked]
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: 🔎 Check whether bootstrapping is still needed
+        id: check
+        run: |
+          set -euo pipefail
+          # The script is deleted with the rest of the scaffolding, so its
+          # absence means an earlier run already finished.
+          if [ -f .github/scripts/template-bootstrap.sh ] \
+             && bash .github/scripts/template-bootstrap.sh --check; then
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: ✏️ Replace template placeholders
+        if: steps.check.outputs.needed == 'true'
+        run: |
+          set -euo pipefail
+
+          # The owner's display name, falling back to the login. The account
+          # type determines whether the owner can also be a CODEOWNER.
+          FULL_NAME="$(gh api "users/${OWNER}" --jq '.name // empty' || true)"
+          OWNER_TYPE="$(gh api "users/${OWNER}" --jq '.type // empty' || true)"
+          export FULL_NAME OWNER_TYPE
+
+          # Keep the checklist around for the issue created further down.
+          cp .github/TEMPLATE_CHECKLIST.md "${RUNNER_TEMP}/checklist.md"
+
+          # Replaces the placeholders, writes CODEOWNERS, and strips every
+          # TEMPLATE-SETUP and TEMPLATE-NOTICE block. Its test is
+          # .github/scripts/template-bootstrap.test.sh.
+          bash .github/scripts/template-bootstrap.sh
+
+      - name: 🧹 Remove the template scaffolding
+        if: steps.check.outputs.needed == 'true'
+        run: |
+          set -euo pipefail
+
+          # NOTE: the workflows are NOT removed here. They are deleted in
+          # their own commit further down, so that a token barred from
+          # writing under .github/workflows costs us only that deletion.
+          rm -f .github/TEMPLATE_CHECKLIST.md \
+                .github/scripts/template-bootstrap.sh \
+                .github/scripts/template-bootstrap.test.sh
+          rmdir .github/scripts 2>/dev/null || true
+
+      - name: 📋 Open the setup checklist issue
+        id: checklist
+        if: steps.check.outputs.needed == 'true'
+        run: |
+          set -euo pipefail
+
+          # Publish the checklist to the run summary unconditionally, so it
+          # survives even when it cannot be filed as an issue.
+          {
+            echo "## Finish setting up this repository"
+            echo
+            cat "${RUNNER_TEMP}/checklist.md"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # Do not depend on the separate label-sync workflow winning a race:
+          # "maintenance" is not one of GitHub's default labels, and both the
+          # checklist issue and a fallback bootstrap pull request carry it.
+          gh label create "maintenance" \
+            --color "2af79e" \
+            --description "Generic maintenance tasks." \
+            --force \
+            || echo "::warning::Could not create the maintenance label."
+
+          # Issues can be turned off entirely. That must not cost the
+          # repository the rest of its personalization, so keep the checklist
+          # as a file instead and carry on.
+          if [ "$HAS_ISSUES" != "true" ]; then
+            cp "${RUNNER_TEMP}/checklist.md" .github/TEMPLATE_CHECKLIST.md
+            echo "issue_number=" >> "$GITHUB_OUTPUT"
+            echo "::warning::Issues are disabled, so the setup checklist was not filed as an issue. It is in this run's summary, and .github/TEMPLATE_CHECKLIST.md has been kept in the repository."
+            exit 0
+          fi
+
+          # A failed push leaves this workflow in place, so make retries safe.
+          existing_issue="$(
+            gh issue list \
+              --state all \
+              --limit 100 \
+              --json number,title \
+              --jq '[.[] | select(.title == "Finish setting up this repository")][0].number // empty'
+          )"
+
+          if [ -n "$existing_issue" ]; then
+            echo "The setup checklist issue already exists; not creating another."
+          else
+            issue_url="$(gh issue create \
+              --title "Finish setting up this repository" \
+              --body-file "${RUNNER_TEMP}/checklist.md" \
+              --label "maintenance")"
+            existing_issue="${issue_url##*/}"
+          fi
+
+          echo "issue_number=${existing_issue}" >> "$GITHUB_OUTPUT"
+
+      - name: 💾 Commit the personalized repository
+        if: steps.check.outputs.needed == 'true'
+        env:
+          CHECKLIST_ISSUE: ${{ steps.checklist.outputs.issue_number }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+            exit 0
+          fi
+          git commit \
+            -m "chore: bootstrap repository from template" \
+            -m "Replaced the template placeholders and removed the template notices."
+
+          # The self-removal is a SEPARATE commit on purpose. GITHUB_TOKEN is a
+          # GitHub App token, and GitHub's pre-receive hook refuses pushes from
+          # one that touch .github/workflows -- `workflows` is not a grantable
+          # key in the permissions block, so this cannot be configured away.
+          # Isolating the removal means that restriction costs us only the
+          # deletion, never the rest of the personalization.
+          removal_committed=false
+          workflow_kept=false
+          if [ -f .github/workflows/template-bootstrap.yml ]; then
+            git rm -q --ignore-unmatch \
+              .github/workflows/template-bootstrap.yml \
+              .github/workflows/template-test.yml
+            git commit -q -m "chore: remove the template bootstrap workflows"
+            removal_committed=true
+          fi
+
+          # Pushes HEAD to the named branch; any further arguments are passed
+          # to git push. If the push is refused only because the token may not
+          # write under .github/workflows, the self-removal commit is dropped
+          # and the push retried without it.
+          push_head() {
+            local target="$1" output
+            shift
+            if output="$(git push "$@" origin "HEAD:refs/heads/${target}" 2>&1)"; then
+              printf '%s\n' "$output"
+              return 0
+            fi
+            printf '%s\n' "$output" >&2
+
+            if [ "$removal_committed" = true ] && printf '%s' "$output" | grep -qi 'refusing to allow'; then
+              echo "This token may not remove the bootstrap workflow; retrying without that commit."
+              git reset --hard HEAD~1
+              removal_committed=false
+              workflow_kept=true
+              if output="$(git push "$@" origin "HEAD:refs/heads/${target}" 2>&1)"; then
+                printf '%s\n' "$output"
+                return 0
+              fi
+              printf '%s\n' "$output" >&2
+            fi
+            return 1
+          }
+
+          comment_on_checklist() {
+            [ -n "${CHECKLIST_ISSUE:-}" ] || return 0
+            gh issue comment "$CHECKLIST_ISSUE" --body "$1" \
+              || echo "::warning::Could not comment on issue #${CHECKLIST_ISSUE}."
+          }
+
+          if push_head "$BASE_BRANCH"; then
+            echo "Pushed the bootstrap commit directly to ${BASE_BRANCH}."
+            pushed_branch="$BASE_BRANCH"
+          else
+            # Protected default branches commonly reject direct writes.
+            # Preserve the generated commit and propose it via pull request.
+            #
+            # The branch name is fixed so that later pushes to the default
+            # branch, which rerun this workflow until the pull request is
+            # merged, find the open pull request instead of opening another.
+            setup_branch="template-bootstrap"
+            open_pr="$(gh pr list \
+              --head "$setup_branch" \
+              --base "$BASE_BRANCH" \
+              --state open \
+              --json url \
+              --jq '.[0].url // empty')"
+            if [ -n "$open_pr" ]; then
+              echo "The bootstrap pull request is already open: ${open_pr}"
+              exit 0
+            fi
+
+            # No open pull request, so anything left on the branch is from an
+            # earlier attempt that was closed unmerged; replace it.
+            if ! push_head "$setup_branch" --force; then
+              echo "::error::The bootstrap changes could not be pushed to ${BASE_BRANCH} or to ${setup_branch}."
+              exit 1
+            fi
+            pushed_branch="$setup_branch"
+
+            if pr_result="$(gh pr create \
+              --base "$BASE_BRANCH" \
+              --head "$setup_branch" \
+              --title "chore: bootstrap repository from template" \
+              --body "The default branch rejected the bootstrap commit. This pull request applies the generated repository personalization without bypassing branch protection. If required checks are missing, close and reopen this pull request so GitHub emits a user-initiated pull-request event." \
+              2>&1)"; then
+              echo "Opened bootstrap pull request: ${pr_result}"
+              # The PR Labels check requires a label. Added separately so that
+              # a missing label cannot stop the pull request being opened.
+              # gh prints the pull request URL last, after any warnings.
+              gh pr edit "${pr_result##*$'\n'}" --add-label "maintenance" \
+                || echo "::warning::Could not label the bootstrap pull request; add the maintenance label by hand."
+            else
+              echo "${pr_result}" >&2
+              compare_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/${BASE_BRANCH}...${setup_branch}?expand=1"
+              comment_on_checklist "Branch protection rejected the direct bootstrap commit, and repository policy prevented GitHub Actions from opening a pull request. [Open the preserved setup branch as a pull request](${compare_url})."
+              echo "::error::The bootstrap commit is preserved on ${setup_branch}, but GitHub Actions could not open its pull request."
+              exit 1
+            fi
+          fi
+
+          # Apply .github/labels.yml now rather than leaving it to a manual
+          # step: the PR Labels check needs those labels to exist. This runs
+          # on the pull request path too -- the template's labels.yml is
+          # already on the default branch, and merging the bootstrap pull
+          # request does not touch it, so its push trigger would never fire.
+          gh workflow run labels.yml --ref "$BASE_BRANCH" \
+            || echo "::warning::Could not start the Sync labels workflow; run it from the Actions tab."
+
+          if [ "$workflow_kept" = true ]; then
+            note="GitHub Actions could not delete \`.github/workflows/template-bootstrap.yml\` or \`.github/workflows/template-test.yml\`, because \`GITHUB_TOKEN\` may not write under \`.github/workflows\`. Everything else was applied. Please delete those two files by hand."
+            if [ "$pushed_branch" = "$BASE_BRANCH" ]; then
+              gh workflow disable template-bootstrap.yml \
+                || echo "::warning::Could not disable the bootstrap workflow."
+              note="${note} It has been disabled in the meantime and will not run again."
+            else
+              note="${note} Delete them after merging the bootstrap pull request."
+            fi
+            echo "::warning::${note}"
+            comment_on_checklist "$note"
+          fi

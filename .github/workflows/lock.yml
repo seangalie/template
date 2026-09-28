@@ -1,0 +1,46 @@
+---
+name: Lock
+
+on:
+  schedule:
+    - cron: "23 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lock:
+    name: 🔒 Lock closed issues and PRs
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      discussions: write
+    steps:
+      - name: 🚀 Run Lock Threads
+        uses: dessant/lock-threads@89ae32b08ed1a541efecbab17912962a5e38981c # v6.0.2
+        with:
+          github-token: ${{ github.token }}
+          issue-inactive-days: "30"
+          issue-lock-reason: ""
+          issue-comment: >
+            Issue closed and locked due to lack of activity.
+
+            If you encounter this same issue, please open a new issue and refer
+            to this closed one.
+          # Long enough that a merged pull request can still be discussed, and
+          # short enough to keep drive-by comments off old work.
+          pr-inactive-days: "30"
+          pr-lock-reason: ""
+          pr-comment: >
+            Pull Request closed and locked due to lack of activity.
+
+            If you'd like to build on this closed PR, you can clone it using
+            this method: https://stackoverflow.com/a/14969986
+
+            Then open a new PR, referencing this closed PR in your message.
+          # Stated explicitly: this action processes discussions by default
+          # (at 365 days), which is why the job holds `discussions: write`.
+          # Set `process-only: issues, prs` to leave discussions alone.
+          discussion-inactive-days: "365"

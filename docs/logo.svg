@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+    <defs>
+        <style>
+            .bg { fill: #0d1117; }
+            .window-bar { fill: #161b22; }
+            .text-base { font-family: 'Courier New', Courier, monospace; font-size: 16px; fill: #58a6ff; }
+            .text-green { fill: #3fb950; }
+            .text-yellow { fill: #d29922; }
+            .text-dim { fill: #8b949e; }
+            .text-red { fill: #f85149; }
+
+            /* Animation Configurations */
+            @keyframes blink {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0; }
+            }
+            @keyframes reveal {
+                0% { opacity: 0; }
+                100% { opacity: 1; }
+            }
+
+            .cursor { animation: blink 1s infinite; fill: #58a6ff; }
+
+            /* Sequential row delays to simulate text output streaming over time */
+            .row-1 { animation: reveal 0s forwards; animation-delay: 0.5s; opacity: 0; }
+            .row-2 { animation: reveal 0s forwards; animation-delay: 1.8s; opacity: 0; }
+            .row-3 { animation: reveal 0s forwards; animation-delay: 3.0s; opacity: 0; }
+            .row-4 { animation: reveal 0s forwards; animation-delay: 4.5s; opacity: 0; }
+            .row-5 { animation: reveal 0s forwards; animation-delay: 6.0s; opacity: 0; }
+            .row-6 { animation: reveal 0s forwards; animation-delay: 7.5s; opacity: 0; }
+            .row-7 { animation: reveal 0s forwards; animation-delay: 9.0s; opacity: 0; }
+        </style>
+    </defs>
+
+    <!-- Background window shell -->
+    <rect class="bg" width="800" height="450" rx="8" />
+    <rect class="window-bar" width="800" height="35" rx="8" />
+
+    <!-- Window Control Buttons (macOS Style Chrome) -->
+    <circle cx="20" cy="17.5" r="6" fill="#f85149" />
+    <circle cx="40" cy="17.5" r="6" fill="#d29922" />
+    <circle cx="60" cy="17.5" r="6" fill="#3fb950" />
+    <text x="400" y="22" fill="#8b949e" font-family="sans-serif" font-size="13" text-anchor="middle">terminal — github</text>
+
+    <!-- Terminal Output Canvas -->
+    <g transform="translate(25, 40)">
+
+        <!-- Row 1: Initialize command -->
+        <g class="row-1">
+            <text x="0" y="30" class="text-base"><tspan class="text-green">user@dev:~$</tspan> mkdir project</text>
+        </g>
+
+        <!-- Row 2: Initialize command -->
+        <g class="row-2">
+            <text x="0" y="65" class="text-base"><tspan class="text-green">user@dev:~$</tspan> cd project</text>
+        </g>
+
+        <!-- Row 3: Initialize command -->
+        <g class="row-3">
+            <text x="0" y="100" class="text-base"><tspan class="text-green">user@dev:~/project$</tspan> git init</text>
+        </g>
+
+        <!-- Row 4: Connecting Proxy -->
+        <g class="row-4">
+            <text x="0" y="135" class="text-base text-dim" font-weight="bold">Initialized empty Git repository in ~/project/.git/</text>
+        </g>
+
+        <!-- Row 5: Initialize command -->
+        <g class="row-5">
+            <text x="0" y="170" class="text-base"><tspan class="text-green">user@dev:~/project$</tspan> git switch -c main</text>
+        </g>
+
+        <!-- Row 6: Initialize command -->
+        <g class="row-6">
+            <text x="0" y="205" class="text-base"><tspan class="text-green">user@dev:~/project/(main)$</tspan> git remote add origin git@github.com:user/project.git</text>
+        </g>
+
+        <!-- Row 7: Loop Cursor Prompt -->
+        <g class="row-7">
+            <text x="0" y="240" class="text-base"><tspan class="text-green">user@dev:~/project/(main)$</tspan> git add <tspan class="cursor">█</tspan></text>
+        </g>
+
+    </g>
+</svg>

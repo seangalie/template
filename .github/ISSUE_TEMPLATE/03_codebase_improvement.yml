@@ -1,0 +1,44 @@
+---
+name: 🛠 Codebase Improvement
+description: Suggest a better algorithm, structure, tool, or developer workflow
+title: "dev: "
+labels: ["enhancement", "refactor"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for changes that improve the codebase without changing what
+        PROJECT_NAME does for its users -- refactors, tooling, build times,
+        test coverage, developer ergonomics.
+
+  - type: textarea
+    id: area
+    attributes:
+      label: What part of the codebase?
+      description: Files, modules, or workflows this concerns. Links to lines are welcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: What is the current approach?
+      description: Describe how it works today and what makes it worth changing.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you change it to?
+      description: The improvement you have in mind, and the benefit it brings.
+    validations:
+      required: true
+
+  - type: textarea
+    id: tradeoffs
+    attributes:
+      label: Trade-offs and risks
+      description: What would this cost, break, or make harder?
+    validations:
+      required: false

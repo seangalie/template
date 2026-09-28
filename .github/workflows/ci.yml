@@ -1,0 +1,50 @@
+---
+# A starting point for this project's build and test pipeline. It passes as-is
+# so that a new repository does not begin with a failing check; replace the
+# placeholder step with real setup, build, and test steps.
+#
+# Once it does real work, make "🧪 Build and test" a required status check in
+# the default branch's protection rule or ruleset.
+#
+# Pin every third-party action to a full commit SHA with the version in a
+# trailing comment, as the other workflows here do; Dependabot keeps them
+# current.
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to a pull request supersedes its running build. Builds of main
+# are never cancelled, so every commit there keeps a result.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: 🧪 Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Replace this with the steps your project needs, for example:
+      #   - uses: actions/setup-node@<commit-sha> # vX.Y.Z
+      #     with:
+      #       node-version-file: .nvmrc
+      #       cache: npm
+      #   - run: npm ci
+      #   - run: npm test
+      - name: 🚧 Placeholder
+        run: echo "::notice::No build or test steps are configured yet. Add them to .github/workflows/ci.yml."

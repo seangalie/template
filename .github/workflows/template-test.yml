@@ -1,0 +1,38 @@
+---
+# Tests the Template Bootstrap in the template repository: shellcheck over its
+# scripts, then a run of template-bootstrap.sh against a copy of the template
+# with the generated tree checked. It never runs in a generated repository, and
+# the bootstrap deletes it there along with its own workflow.
+
+name: Template test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  bootstrap:
+    name: 🧰 Test the bootstrap
+    if: ${{ github.event.repository.is_template }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: 🔍 Run shellcheck
+        # shellcheck is preinstalled on ubuntu-latest.
+        run: shellcheck .github/scripts/*.sh
+      - name: 🧪 Run the bootstrap against a copy of the template
+        run: bash .github/scripts/template-bootstrap.test.sh
