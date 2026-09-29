@@ -59,20 +59,59 @@ done < <(grep -rlIE '\[\?\]|\[NOTE:|^[0-9]+\. TODO' . \
   --exclude=TEMPLATE_CHECKLIST.md || true)
 
 echo "case: the PR label list is the same everywhere it is repeated"
-# The labels the PR Labels check accepts, from its folded `labels: >-` block.
-pr_labels="$(awk '
-  /^[[:space:]]*labels: >-/ { grab = 1; next }
-  grab && /^[[:space:]]*[a-z]/ { printf "%s ", $0; next }
-  grab { exit }
-' .github/workflows/pr-labels.yml | tr ',' ' ')"
-[ -n "${pr_labels// /}" ] || fail "could not read the label list from .github/workflows/pr-labels.yml"
-for label in $pr_labels; do
-  grep -qxF -e "- name: \"${label}\"" .github/labels.yml \
-    || fail "PR label ${label} is not defined in .github/labels.yml"
-  for doc in AGENTS.md docs/CONTRIBUTING.md .github/PULL_REQUEST_TEMPLATE.md; do
-    grep -qF "\`${label}\`" "$doc" || fail "PR label ${label} is missing from ${doc}"
-  done
-done
+# Each copy is reduced to a sorted set, one label per line, and compared with
+# the set the PR Labels check actually enforces, so a label added to or removed
+# from any single copy is caught.
+
+# The folded `labels: >-` block of the PR Labels check.
+pr_label_set() {
+  awk '
+    /^[[:space:]]*labels: >-/ { grab = 1; next }
+    grab && /^[[:space:]]*[a-z]/ { print; next }
+    grab { exit }
+  ' .github/workflows/pr-labels.yml | tr -s ', ' '\n' | grep -v '^$' | sort -u
+}
+
+# The "Kind of change" group at the top of labels.yml, up to its blank line.
+labels_yml_set() {
+  awk '
+    /^# Kind of change/ { grab = 1; next }
+    grab && /^$/ { exit }
+    grab
+  ' .github/labels.yml | sed -n 's/^- name: "\(.*\)"$/\1/p' | sort -u
+}
+
+# The backticked lower-case words in the Markdown list item or line that
+# contains the marker, which filters out file names and `PR Labels`.
+# shellcheck disable=SC2016 # The backticks are Markdown, matched literally.
+doc_label_set() {
+  awk -v marker="$2" '
+    index($0, marker) { grab = 1; print; next }
+    grab && (/^- / || /^$/) { exit }
+    grab
+  ' "$1" | grep -oE '`[a-z][a-z-]*`' | tr -d '`' | sort -u
+}
+
+# compare_labels NAME SET: fails with the labels NAME has extra or lacks.
+compare_labels() {
+  local extra missing
+  extra="$(comm -13 <(printf '%s\n' "$expected") <(printf '%s\n' "$2") | tr '\n' ' ')"
+  missing="$(comm -23 <(printf '%s\n' "$expected") <(printf '%s\n' "$2") | tr '\n' ' ')"
+  [ -z "$extra" ] || fail "$1 lists labels the PR Labels check does not accept: ${extra}"
+  [ -z "$missing" ] || fail "$1 is missing PR labels: ${missing}"
+}
+
+expected="$(pr_label_set)"
+if [ -z "$expected" ]; then
+  fail "could not read the label list from .github/workflows/pr-labels.yml"
+else
+  compare_labels ".github/labels.yml" "$(labels_yml_set)"
+  compare_labels "AGENTS.md" "$(doc_label_set AGENTS.md '**Pull requests**')"
+  compare_labels "docs/CONTRIBUTING.md" "$(doc_label_set docs/CONTRIBUTING.md '**A label is required.**')"
+  # shellcheck disable=SC2016 # The backticks are Markdown, matched literally.
+  compare_labels ".github/PULL_REQUEST_TEMPLATE.md" \
+    "$(doc_label_set .github/PULL_REQUEST_TEMPLATE.md 'the `PR Labels` check requires')"
+fi
 
 echo "case: personal account, with shell and regex metacharacters in the name"
 fresh_copy user

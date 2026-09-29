@@ -134,8 +134,10 @@ $RECYCLE.BIN/
 
 # Covers IntelliJ IDEA, PyCharm, GoLand, WebStorm, Rider and the rest. Shared
 # run configurations and code style can be committed by un-ignoring them, e.g.
-# !.idea/runConfigurations/ and !.idea/codeStyles/.
-.idea/
+# !.idea/runConfigurations/ and !.idea/codeStyles/. That only works because the
+# rule below ignores what is inside .idea rather than the directory itself: git
+# cannot re-include a file whose parent directory is excluded.
+.idea/*
 *.iml
 *.ipr
 *.iws
