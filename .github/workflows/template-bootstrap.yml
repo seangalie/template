@@ -252,11 +252,20 @@ jobs:
             fi
             pushed_branch="$setup_branch"
 
+            # A pull request opened with GITHUB_TOKEN gets its workflow runs
+            # in an approval-required state rather than none at all, so point
+            # at the approval. PR Labels reads the labels through the API when
+            # it runs, so the label added below counts once it is approved.
+            pr_body="The default branch rejected the bootstrap commit, so this pull request applies the generated repository personalization without bypassing branch protection.
+
+          **Its checks are waiting for approval.** GitHub Actions opened this pull request, so GitHub holds its workflow runs until someone with write access selects **Approve workflows to run** in the merge box below.
+
+          It should already carry the \`maintenance\` label that the PR Labels check requires; add it before approving if it does not. If no approval banner appears and the checks still have not run, close and reopen this pull request to start them."
             if pr_result="$(gh pr create \
               --base "$BASE_BRANCH" \
               --head "$setup_branch" \
               --title "chore: bootstrap repository from template" \
-              --body "The default branch rejected the bootstrap commit. This pull request applies the generated repository personalization without bypassing branch protection. If required checks are missing, close and reopen this pull request so GitHub emits a user-initiated pull-request event." \
+              --body "$pr_body" \
               2>&1)"; then
               echo "Opened bootstrap pull request: ${pr_result}"
               # The PR Labels check requires a label. Added separately so that

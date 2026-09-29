@@ -170,6 +170,45 @@ if REPO=my-widget bash "$SCRIPT" > /dev/null 2>&1; then
 fi
 [ -n "$(leftovers "$PLACEHOLDERS")" ] || fail "the script changed files before rejecting a missing OWNER"
 
+# expect_marker_rejection NAME FILE PERL-EXPRESSION EXPECTED-MESSAGE
+# Breaks the markers in FILE of a fresh copy, then checks the script refuses
+# to run, says why, and changes nothing at all.
+expect_marker_rejection() {
+  echo "case: $1"
+  fresh_copy "markers-${1// /-}"
+  perl -0pi -e "$3" "$2"
+  local before="${WORK}/markers-before"
+  rm -rf "$before"
+  cp -r . "$before"
+  if OWNER=octo-cat REPO=my-widget bash "$SCRIPT" > "${WORK}/last-run.log" 2>&1; then
+    fail "$1: the script ran despite the broken markers"
+  fi
+  grep -qF "$4" "${WORK}/last-run.log" || fail "$1: the error does not say \"$4\""
+  diff -r "$before" . > /dev/null || fail "$1: the script changed files before rejecting the markers"
+}
+
+expect_marker_rejection "unclosed start marker" docs/SUPPORT.md \
+  's/\z/\n<!-- TEMPLATE-SETUP:START -->\nEverything after an unclosed marker.\n/' \
+  "start marker is never closed"
+expect_marker_rejection "end marker without a start" docs/SUPPORT.md \
+  's/\z/\n<!-- TEMPLATE-NOTICE:END -->\n/' \
+  "end marker without a start marker"
+# shellcheck disable=SC2016 # $1 is the Perl capture group.
+expect_marker_rejection "start marker inside an open block" README.md \
+  's/(TEMPLATE-SETUP:START -->\n)/$1<!-- TEMPLATE-SETUP:START -->\n/' \
+  "start marker inside the block opened on line 1"
+expect_marker_rejection "end marker of the other kind" .gitignore \
+  's/TEMPLATE-NOTICE:END/TEMPLATE-SETUP:END/' \
+  "TEMPLATE-SETUP end marker closes the TEMPLATE-NOTICE block"
+
+echo "case: a start and end marker on one line are a closed block"
+fresh_copy one-line-markers
+printf '%s\n' 'Keep this.' '<!-- TEMPLATE-SETUP:START --> drop this <!-- TEMPLATE-SETUP:END -->' \
+  'Keep this too.' > docs/one-line.md
+OWNER=octo-cat REPO=my-widget run_bootstrap
+[ "$(cat docs/one-line.md)" = "Keep this."$'\n'"Keep this too." ] \
+  || fail "the one-line block was not removed cleanly: $(tr '\n' '|' < docs/one-line.md)"
+
 cd "$ROOT"
 if [ "$failures" -gt 0 ]; then
   echo "${failures} check(s) failed."

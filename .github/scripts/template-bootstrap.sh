@@ -48,6 +48,37 @@ OWNER_TYPE="${OWNER_TYPE:-Unknown}"
 export OWNER REPO FULL_NAME
 echo "Owner: ${OWNER} / Type: ${OWNER_TYPE} / Repo: ${REPO} / Name: ${FULL_NAME}"
 
+# Every TEMPLATE-SETUP or TEMPLATE-NOTICE start marker must be closed by an end
+# marker of the same kind before any file is touched. The deletion further down
+# would otherwise treat an unclosed block as running to the end of the file and
+# remove everything after it. A marker pair on a single line is closed.
+marker_errors=""
+while IFS= read -r file; do
+  if ! errors="$(perl -ne '
+    my ($start) = /TEMPLATE-(SETUP|NOTICE):START/;
+    my ($end) = /TEMPLATE-(SETUP|NOTICE):END/;
+    if ($start) {
+      if ($open) { print "$ARGV:$.: start marker inside the block opened on line $open\n"; $bad = 1 }
+      ($open, $kind) = $end ? (0, "") : ($., $start);
+    } elsif ($end) {
+      if (!$open) { print "$ARGV:$.: end marker without a start marker\n"; $bad = 1 }
+      elsif ($end ne $kind) { print "$ARGV:$.: TEMPLATE-$end end marker closes the TEMPLATE-$kind block opened on line $open\n"; $bad = 1 }
+      $open = 0;
+    }
+    END {
+      if ($open) { print "$ARGV:$open: start marker is never closed\n"; $bad = 1 }
+      exit($bad ? 1 : 0);
+    }
+  ' "$file")"; then
+    marker_errors+="${errors}"$'\n'
+  fi
+done < <(files_matching 'TEMPLATE-(SETUP|NOTICE):(START|END)')
+if [ -n "$marker_errors" ]; then
+  printf '%s' "$marker_errors" | sed 's/^/  /' >&2
+  echo "Unmatched template markers; nothing was changed. Fix them and run this again." >&2
+  exit 1
+fi
+
 # The replacements are read from the environment rather than spliced into the
 # program text, so a name containing \, &, | or / is safe.
 while IFS= read -r file; do
