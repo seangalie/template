@@ -51,18 +51,37 @@ echo "Owner: ${OWNER} / Type: ${OWNER_TYPE} / Repo: ${REPO} / Name: ${FULL_NAME}
 # Every TEMPLATE-SETUP or TEMPLATE-NOTICE start marker must be closed by an end
 # marker of the same kind before any file is touched. The deletion further down
 # would otherwise treat an unclosed block as running to the end of the file and
-# remove everything after it. A marker pair on a single line is closed.
+# remove everything after it.
+#
+# The deletion works on whole lines, not on markers: a line that opens or
+# closes a block goes entirely, and it never looks for a second marker on the
+# line that closed a block. So a line may hold one marker, or a start and an
+# end marker of the same kind in that order, which is a one-line block. Any
+# other combination on one line is rejected rather than guessed at.
 marker_errors=""
 while IFS= read -r file; do
   if ! errors="$(perl -ne '
-    my ($start) = /TEMPLATE-(SETUP|NOTICE):START/;
-    my ($end) = /TEMPLATE-(SETUP|NOTICE):END/;
-    if ($start) {
+    my @markers;
+    push @markers, [$1, $2] while /TEMPLATE-(SETUP|NOTICE):(START|END)/g;
+    next unless @markers;
+    if (@markers > 1) {
+      my ($first, $second) = @markers;
+      if (@markers == 2 && $first->[1] eq "START" && $second->[1] eq "END"
+          && $first->[0] eq $second->[0]) {
+        if ($open) { print "$ARGV:$.: one-line block inside the block opened on line $open\n"; $bad = 1 }
+      } else {
+        print "$ARGV:$.: a line may hold one template marker, or a start and end marker of the same kind, in that order\n";
+        $bad = 1;
+      }
+      next;
+    }
+    my ($marker_kind, $type) = @{ $markers[0] };
+    if ($type eq "START") {
       if ($open) { print "$ARGV:$.: start marker inside the block opened on line $open\n"; $bad = 1 }
-      ($open, $kind) = $end ? (0, "") : ($., $start);
-    } elsif ($end) {
+      ($open, $kind) = ($., $marker_kind);
+    } else {
       if (!$open) { print "$ARGV:$.: end marker without a start marker\n"; $bad = 1 }
-      elsif ($end ne $kind) { print "$ARGV:$.: TEMPLATE-$end end marker closes the TEMPLATE-$kind block opened on line $open\n"; $bad = 1 }
+      elsif ($marker_kind ne $kind) { print "$ARGV:$.: TEMPLATE-$marker_kind end marker closes the TEMPLATE-$kind block opened on line $open\n"; $bad = 1 }
       $open = 0;
     }
     END {

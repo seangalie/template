@@ -201,6 +201,19 @@ expect_marker_rejection "end marker of the other kind" .gitignore \
   's/TEMPLATE-NOTICE:END/TEMPLATE-SETUP:END/' \
   "TEMPLATE-SETUP end marker closes the TEMPLATE-NOTICE block"
 
+expect_marker_rejection "start and end markers of different kinds on one line" docs/SUPPORT.md \
+  's/\z/\n<!-- TEMPLATE-SETUP:START --> x <!-- TEMPLATE-NOTICE:END -->\n/' \
+  "a line may hold one template marker"
+# The deletion works line by line, so it would never notice the second marker
+# here and would keep the next block. A marker-by-marker check would accept it.
+expect_marker_rejection "a line that closes one block and opens another" docs/SUPPORT.md \
+  's/\z/\n<!-- TEMPLATE-SETUP:START -->\na\n<!-- TEMPLATE-SETUP:END --> <!-- TEMPLATE-SETUP:START -->\nb\n<!-- TEMPLATE-SETUP:END -->\n/' \
+  "a line may hold one template marker"
+# shellcheck disable=SC2016 # $1 is the Perl capture group.
+expect_marker_rejection "a one-line block inside an open block" README.md \
+  's/(TEMPLATE-SETUP:START -->\n)/$1<!-- TEMPLATE-NOTICE:START --> x <!-- TEMPLATE-NOTICE:END -->\n/' \
+  "one-line block inside the block opened on line 1"
+
 echo "case: a start and end marker on one line are a closed block"
 fresh_copy one-line-markers
 printf '%s\n' 'Keep this.' '<!-- TEMPLATE-SETUP:START --> drop this <!-- TEMPLATE-SETUP:END -->' \
