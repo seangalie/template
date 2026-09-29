@@ -170,6 +170,58 @@ if REPO=my-widget bash "$SCRIPT" > /dev/null 2>&1; then
 fi
 [ -n "$(leftovers "$PLACEHOLDERS")" ] || fail "the script changed files before rejecting a missing OWNER"
 
+# expect_marker_rejection NAME FILE PERL-EXPRESSION EXPECTED-MESSAGE
+# Breaks the markers in FILE of a fresh copy, then checks the script refuses
+# to run, says why, and changes nothing at all.
+expect_marker_rejection() {
+  echo "case: $1"
+  fresh_copy "markers-${1// /-}"
+  perl -0pi -e "$3" "$2"
+  local before="${WORK}/markers-before"
+  rm -rf "$before"
+  cp -r . "$before"
+  if OWNER=octo-cat REPO=my-widget bash "$SCRIPT" > "${WORK}/last-run.log" 2>&1; then
+    fail "$1: the script ran despite the broken markers"
+  fi
+  grep -qF "$4" "${WORK}/last-run.log" || fail "$1: the error does not say \"$4\""
+  diff -r "$before" . > /dev/null || fail "$1: the script changed files before rejecting the markers"
+}
+
+expect_marker_rejection "unclosed start marker" docs/SUPPORT.md \
+  's/\z/\n<!-- TEMPLATE-SETUP:START -->\nEverything after an unclosed marker.\n/' \
+  "start marker is never closed"
+expect_marker_rejection "end marker without a start" docs/SUPPORT.md \
+  's/\z/\n<!-- TEMPLATE-NOTICE:END -->\n/' \
+  "end marker without a start marker"
+# shellcheck disable=SC2016 # $1 is the Perl capture group.
+expect_marker_rejection "start marker inside an open block" README.md \
+  's/(TEMPLATE-SETUP:START -->\n)/$1<!-- TEMPLATE-SETUP:START -->\n/' \
+  "start marker inside the block opened on line 1"
+expect_marker_rejection "end marker of the other kind" .gitignore \
+  's/TEMPLATE-NOTICE:END/TEMPLATE-SETUP:END/' \
+  "TEMPLATE-SETUP end marker closes the TEMPLATE-NOTICE block"
+
+expect_marker_rejection "start and end markers of different kinds on one line" docs/SUPPORT.md \
+  's/\z/\n<!-- TEMPLATE-SETUP:START --> x <!-- TEMPLATE-NOTICE:END -->\n/' \
+  "a line may hold one template marker"
+# The deletion works line by line, so it would never notice the second marker
+# here and would keep the next block. A marker-by-marker check would accept it.
+expect_marker_rejection "a line that closes one block and opens another" docs/SUPPORT.md \
+  's/\z/\n<!-- TEMPLATE-SETUP:START -->\na\n<!-- TEMPLATE-SETUP:END --> <!-- TEMPLATE-SETUP:START -->\nb\n<!-- TEMPLATE-SETUP:END -->\n/' \
+  "a line may hold one template marker"
+# shellcheck disable=SC2016 # $1 is the Perl capture group.
+expect_marker_rejection "a one-line block inside an open block" README.md \
+  's/(TEMPLATE-SETUP:START -->\n)/$1<!-- TEMPLATE-NOTICE:START --> x <!-- TEMPLATE-NOTICE:END -->\n/' \
+  "one-line block inside the block opened on line 1"
+
+echo "case: a start and end marker on one line are a closed block"
+fresh_copy one-line-markers
+printf '%s\n' 'Keep this.' '<!-- TEMPLATE-SETUP:START --> drop this <!-- TEMPLATE-SETUP:END -->' \
+  'Keep this too.' > docs/one-line.md
+OWNER=octo-cat REPO=my-widget run_bootstrap
+[ "$(cat docs/one-line.md)" = "Keep this."$'\n'"Keep this too." ] \
+  || fail "the one-line block was not removed cleanly: $(tr '\n' '|' < docs/one-line.md)"
+
 cd "$ROOT"
 if [ "$failures" -gt 0 ]; then
   echo "${failures} check(s) failed."
