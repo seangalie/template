@@ -24,9 +24,10 @@ Thanks for using PROJECT_NAME. Here is where to go, depending on what you need.
 PROJECT_NAME is maintained on a best-effort basis. Issues and discussions are
 read, but there is no response-time guarantee and no commercial support offering.
 
-A question that goes quiet for 30 days is marked stale and closed 7 days later.
-That is housekeeping, not a judgment -- reopen it or open a new one if it still
-matters to you.
+A question or idea that goes quiet for 60 days is marked stale and closed 14 days
+later. Confirmed bugs and prioritized issues are never closed this way. That is
+housekeeping, not a judgment -- reopen it or open a new one if it still matters
+to you.
 
 The single most useful thing you can do to get a fast answer is to include a
 minimal reproduction: the smallest set of steps, input, and configuration that

@@ -6,14 +6,16 @@
 > workflow replaces the `GITHUB_USERNAME`, `REPO_SLUG`, `PROJECT_NAME`, and
 > `FULL_NAME` placeholders across every file, strips the template notices, opens a
 > checklist issue covering the parts that still need a human, applies the
-> labels from `.github/labels.yml`, and then deletes itself.
+> labels from `.github/labels.yml`.
 >
 > It commits directly when repository rules allow that; otherwise it preserves
 > the changes on a setup branch and opens a pull request, and if repository
 > policy blocks automated pull requests too, the checklist issue links to that
-> branch. `GITHUB_TOKEN` is not always permitted to write under
-> `.github/workflows`; when it is not, the bootstrap applies everything else,
-> disables itself, and asks you to delete its file by hand.
+> branch. It also tries to delete its own workflow files, but GitHub normally
+> refuses to let `GITHUB_TOKEN` write under `.github/workflows`, so expect a
+> comment on the checklist issue asking you to delete `template-bootstrap.yml`
+> and `template-test.yml` by hand. They are harmless until you do: once the
+> personalization lands, the bootstrap finds nothing left to change.
 >
 > If it did not run, start it by hand from **Actions → Template Bootstrap → Run
 > workflow**.

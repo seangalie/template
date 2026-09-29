@@ -42,6 +42,6 @@ Issue Number: N/A
 ## Checklist
 
 - [ ] This PR has at least one of the labels the `PR Labels` check requires (`breaking-change`, `bugfix`, `documentation`, `enhancement`, `refactor`, `performance`, `new-feature`, `maintenance`, `ci`, `dependencies`).
-- [ ] User-visible changes are recorded under `## [Unreleased]` in `CHANGELOG.md`.
+- [ ] User-visible changes are recorded under `## [Unreleased]` in [CHANGELOG.md](https://github.com/GITHUB_USERNAME/REPO_SLUG/blob/main/CHANGELOG.md).
 - [ ] Commit messages follow [conventional commits](https://www.conventionalcommits.org).
 - [ ] Documentation has been updated where it was affected.

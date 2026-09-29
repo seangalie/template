@@ -33,6 +33,19 @@ indent_style = tab
 [*.md]
 # Two trailing spaces are a hard line break in Markdown.
 trim_trailing_whitespace = false
+# List continuation and nested code blocks follow the list marker, not a
+# fixed step, so there is no single indent size to enforce.
+indent_size = unset
+
+[LICENSE]
+# Verbatim license text; its layout is not ours to change.
+indent_style = unset
+indent_size = unset
+
+[.gitignore]
+# The macOS "Icon\r" pattern needs a literal carriage return mid-line, which
+# editorconfig-checker would otherwise report as a wrong line ending.
+end_of_line = unset
 
 # These must keep CRLF on checkout -- see .gitattributes. EditorConfig does
 # expand {a,b} braces; git attribute patterns do not, so the two files spell
