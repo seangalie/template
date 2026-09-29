@@ -1,0 +1,101 @@
+---
+# Publishes a GitHub release when a version tag is pushed, using that version's
+# section of CHANGELOG.md as the release notes.
+#
+#   git tag -a v1.2.0 -m "v1.2.0" && git push origin v1.2.0
+#
+# The tag v1.2.0 picks the `## [1.2.0] - YYYY-MM-DD` section. A tag with a
+# pre-release suffix such as v1.2.0-rc.1 is published as a pre-release. Running
+# it again for a tag that already has a release (re-run the job, or delete and
+# re-push the tag) updates that release's notes.
+#
+# The run fails, publishing nothing, if CHANGELOG.md has no section for the
+# version: a missing section usually means the tag went out before the
+# changelog was prepared.
+#
+# This only writes the release notes. Build and attach artifacts in a job of
+# your own, uploading to the release this job creates. The categories in
+# .github/release.yml apply only to notes generated from the GitHub UI.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+# Two pushes of the same tag must not race to create the release.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: 📦 Publish the release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: 📝 Extract the release notes
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+
+          # Everything under `## [<version>]` up to the next `## [` heading,
+          # without the link definitions Keep a Changelog puts at the end, or
+          # the blank lines around the section. A blank line is only printed
+          # once more text follows it, so trailing ones are dropped.
+          awk -v v="$version" '
+            /^## \[/ {
+              if (found) exit
+              if (index($0, "## [" v "]") == 1) { found = 1; next }
+            }
+            !found || /^\[[^]]+\]: / { next }
+            /^[[:space:]]*$/ { if (started) blank++; next }
+            { while (blank > 0) { print ""; blank-- }; started = 1; print }
+          ' CHANGELOG.md > "${RUNNER_TEMP}/notes.md"
+
+          if [ ! -s "${RUNNER_TEMP}/notes.md" ]; then
+            echo "::error::CHANGELOG.md has no section for ${version}, so nothing was published. Add a \`## [${version}]\` section, then delete and re-push ${TAG}."
+            exit 1
+          fi
+
+          {
+            echo "## Release notes for ${TAG}"
+            echo
+            cat "${RUNNER_TEMP}/notes.md"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 🚀 Create or update the release
+        run: |
+          set -euo pipefail
+
+          prerelease=false
+          case "${TAG#v}" in *-*) prerelease=true ;; esac
+
+          if gh release view "$TAG" --json tagName > /dev/null 2>&1; then
+            gh release edit "$TAG" \
+              --notes-file "${RUNNER_TEMP}/notes.md" \
+              --prerelease="$prerelease"
+            echo "Updated the existing release for ${TAG}."
+          else
+            gh release create "$TAG" \
+              --verify-tag \
+              --title "$TAG" \
+              --notes-file "${RUNNER_TEMP}/notes.md" \
+              --prerelease="$prerelease"
+            echo "Published the release for ${TAG}."
+          fi

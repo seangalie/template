@@ -1,10 +1,20 @@
 ---
+# Applied by the Sync labels workflow (.github/workflows/labels.yml), which the
+# Template Bootstrap starts once and which reruns whenever this file changes on
+# main. Existing labels are updated in place; labels missing from this file are
+# left alone.
+#
+# Issues and pull requests use different labels for the same kind of work: an
+# issue reports a `bug` or asks for an `enhancement`; the pull request that
+# answers it is a `bugfix` or a `new-feature`. The pull-request labels are the
+# ones the PR Labels check accepts. That list is repeated in
+# .github/workflows/pr-labels.yml, AGENTS.md, docs/CONTRIBUTING.md, and
+# .github/PULL_REQUEST_TEMPLATE.md; the template test fails if they drift.
+
+# Kind of change. Every pull request needs at least one of these.
 - name: "breaking-change"
   color: ee0701
   description: "A change that changes the API or breaks backward compatibility for users."
-- name: "bug"
-  color: d73a4a
-  description: "A reported defect: something is not working as intended."
 - name: "bugfix"
   color: ee0701
   description: "A change that resolves a defect for users or implementors."
@@ -33,6 +43,19 @@
   color: 1d76db
   description: "Change in project dependencies."
 
+# Kind of issue.
+- name: "bug"
+  color: d73a4a
+  description: "A reported defect: something is not working as intended."
+- name: "security"
+  color: ee0701
+  description: "Addressing a vulnerability or security risk in this project."
+- name: "question"
+  color: d876e3
+  description: "A request for support or further information about this project."
+
+# Workflow state. The Stale workflow applies `stale`, and skips anything
+# carrying `no-stale` or `in-progress`.
 - name: "in-progress"
   color: fbca04
   description: "Issue is currently being worked on by a developer."
@@ -43,18 +66,13 @@
   color: fef2c0
   description: "This is exempt from the stale bot."
 
-- name: "security"
-  color: ee0701
-  description: "Addressing a vulnerability or security risk in this project."
+# Triage.
 - name: "incomplete"
   color: fef2c0
   description: "Missing information."
 - name: "invalid"
   color: fef2c0
   description: "This is off-topic, spam, or otherwise doesn't apply to this project."
-- name: "question"
-  color: d876e3
-  description: "A request for support or further information about this project."
 
 # These two match GitHub's default label names, which the repository's
 # /contribute page and good-first-issue aggregators look for. The aliases are
@@ -70,6 +88,7 @@
   description: "We need some extra helping hands or expertise in order to resolve this!"
   aliases: ["help-wanted"]
 
+# Priority. The Stale workflow never closes an issue carrying one of these.
 - name: "priority-critical"
   color: ee0701
   description: "Must be addressed as soon as possible."
@@ -82,4 +101,3 @@
 - name: "priority-low"
   color: e4ea8a
   description: "Nice addition, maybe... someday..."
-

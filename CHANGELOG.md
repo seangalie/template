@@ -21,7 +21,9 @@ changed for them and what they need to do about it.
 
 When cutting a release, rename [Unreleased] to the new version with its release
 date, start a fresh [Unreleased] section above it, and update the link
-definitions at the bottom of the file.
+definitions at the bottom of the file. Then push a matching tag, such as v1.2.0
+for a `## [1.2.0] - YYYY-MM-DD` section: the Release workflow publishes that
+section as the GitHub release notes, and refuses to publish if it is missing.
 -->
 
 ## [Unreleased]

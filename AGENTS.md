@@ -74,7 +74,11 @@ it out from the code and `.github/workflows/ci.yml` rather than guessing.
 - **Formatting** follows `.editorconfig`: UTF-8, LF line endings, and a final
   newline. Indent with 2 spaces for YAML, JSON, TOML, web files, shell, and
   Ruby; 4 spaces elsewhere; tabs for Go and Makefiles. PowerShell, batch, and
-  CSV files use CRLF.
+  CSV files use CRLF. The Lint workflow enforces it with editorconfig-checker,
+  and runs shellcheck over every `*.sh` and `*.bash` file.
+- **Releases:** move the `## [Unreleased]` entries under a new version heading,
+  then push a matching `v*` tag. The Release workflow publishes that
+  `CHANGELOG.md` section as the release notes.
 - **GitHub Actions:** pin every third-party action to a full commit SHA with its
   version in a trailing comment (`uses: owner/action@<sha> # vX.Y.Z`), and grant
   each workflow only the `permissions:` it needs. actionlint and zizmor check

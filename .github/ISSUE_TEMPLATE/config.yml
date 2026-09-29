@@ -11,3 +11,6 @@ contact_links:
   - name: 📖 Contributing guide
     url: https://github.com/GITHUB_USERNAME/REPO_SLUG/blob/main/docs/CONTRIBUTING.md
     about: How to set up a development environment and open a pull request.
+  - name: 🧭 Support guide
+    url: https://github.com/GITHUB_USERNAME/REPO_SLUG/blob/main/docs/SUPPORT.md
+    about: Where to ask what, and what to expect.

@@ -128,6 +128,18 @@ $RECYCLE.BIN/
 !.env.example
 !.env.sample
 
+# -----------------------------
+# .gitignore for JetBrains IDEs
+# -----------------------------
+
+# Covers IntelliJ IDEA, PyCharm, GoLand, WebStorm, Rider and the rest. Shared
+# run configurations and code style can be committed by un-ignoring them, e.g.
+# !.idea/runConfigurations/ and !.idea/codeStyles/.
+.idea/
+*.iml
+*.ipr
+*.iws
+
 # ------------------------------------
 # .gitignore for Agents and Assistants
 # ------------------------------------

@@ -51,6 +51,8 @@ A few checks run automatically on every pull request:
   `bugfix`, `documentation`, `enhancement`, `refactor`, `performance`,
   `new-feature`, `maintenance`, `ci`, or `dependencies`. A maintainer can add one
   if you are unable to.
+- **Lint must pass.** The Lint workflow runs shellcheck over the shell scripts
+  and checks every file against the [`.editorconfig`](../.editorconfig) rules.
 - **Add a changelog entry.** Note user-visible changes under `## [Unreleased]` in
   [CHANGELOG.md](../CHANGELOG.md). Internal-only changes do not need one.
 - **Keep commits conventional.** See [conventional commits](https://www.conventionalcommits.org).

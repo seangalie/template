@@ -54,9 +54,25 @@ while IFS= read -r file; do
   grep -qF "\`${file}\`" .github/TEMPLATE_CHECKLIST.md \
     || fail "${file} has a prompt, but .github/TEMPLATE_CHECKLIST.md does not mention it"
 done < <(grep -rlIE '\[\?\]|\[NOTE:|^[0-9]+\. TODO' . \
-           --exclude-dir=.git \
-           --exclude='*template-bootstrap*' \
-           --exclude=TEMPLATE_CHECKLIST.md || true)
+  --exclude-dir=.git \
+  --exclude='*template-bootstrap*' \
+  --exclude=TEMPLATE_CHECKLIST.md || true)
+
+echo "case: the PR label list is the same everywhere it is repeated"
+# The labels the PR Labels check accepts, from its folded `labels: >-` block.
+pr_labels="$(awk '
+  /^[[:space:]]*labels: >-/ { grab = 1; next }
+  grab && /^[[:space:]]*[a-z]/ { printf "%s ", $0; next }
+  grab { exit }
+' .github/workflows/pr-labels.yml | tr ',' ' ')"
+[ -n "${pr_labels// /}" ] || fail "could not read the label list from .github/workflows/pr-labels.yml"
+for label in $pr_labels; do
+  grep -qxF -e "- name: \"${label}\"" .github/labels.yml \
+    || fail "PR label ${label} is not defined in .github/labels.yml"
+  for doc in AGENTS.md docs/CONTRIBUTING.md .github/PULL_REQUEST_TEMPLATE.md; do
+    grep -qF "\`${label}\`" "$doc" || fail "PR label ${label} is missing from ${doc}"
+  done
+done
 
 echo "case: personal account, with shell and regex metacharacters in the name"
 fresh_copy user

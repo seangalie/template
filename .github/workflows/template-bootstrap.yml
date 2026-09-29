@@ -63,7 +63,7 @@ jobs:
           # The script is deleted with the rest of the scaffolding, so its
           # absence means an earlier run already finished.
           if [ -f .github/scripts/template-bootstrap.sh ] \
-             && bash .github/scripts/template-bootstrap.sh --check; then
+            && bash .github/scripts/template-bootstrap.sh --check; then
             echo "needed=true" >> "$GITHUB_OUTPUT"
           else
             echo "needed=false" >> "$GITHUB_OUTPUT"
